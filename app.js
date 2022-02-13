@@ -21,10 +21,13 @@ app.get("/", (req, res) => {
 app.get("/fakeUser", async (req, res) => {
     // const user = new User({ email: 'colt@gmail.com', username: "colt" })
     // const newUser = await User.register(user, 'password'); //user register method to add new user
-    const user = await User.findOne({ username: "chan" })
+    const user = { name: "colt", email: "chan1992241@gmail.com" }
     res.status(200).send(JSON.stringify(user));
 })
 
+
+const port = process.env.PORT || 3000;
+
 app.listen(3000, () => {
-    console.log("listening on port 3000")
+    console.log("listening on port " + port);
 })
