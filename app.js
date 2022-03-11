@@ -1,14 +1,16 @@
-require('dotenv').config();
+if (process.env.NODE_ENV !== 'production') {
+    require('dotenv').config()
+}
 const express = require("express");
 const app = express();
-const User = require("./model/user");
+const studentUserModel = require("./model/StudentUser");
+const lecturerUserModel = require("./model/LecturerUser");
 const mongoose = require("mongoose");
-// const socket = require("socket.io");
-// use ejs-locals for all ejs templates (refer to ejs-mate doc)
+
 app.use(express.json()) // for parsing application/json
 app.use(express.urlencoded({ extended: true }))
 
-const dbURL = process.env.DB_URL;
+const dbURL = process.env.DB_URL || "mongodb://localhost:27017/appointmentSystem";
 mongoose.connect(dbURL, { useNewUrlParser: true, useUnifiedTopology: true });
 const db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:')); //check database connection
@@ -20,38 +22,35 @@ app.get("/", (req, res) => {
     res.send("Hello")
 });
 
-app.post("/createUser", async (req, res) => {
-    const email = 'chan1992241@gmail.com';
-    const user = await User(email);
-    res.json(user);
+app.post("/studentLogin", async (req, res) => {
+    const { studentID, password } = req.body;
+    console.log(studentID, password);
+    const foundStudent = await studentUserModel.findOne({ studentID: studentID });
+    console.log(foundStudent)
+    if (!foundStudent) {
+        return res.status(404).send(JSON.stringify({ status: "error", message: "Wrong Username Or Password" }));
+    } if (foundStudent.password !== password) {
+        return res.status(404).send(JSON.stringify({ status: "error", message: "Wrong Username Or Password" }));
+    }
+    return res.status(200).send({ status: "success", message: "Login success", studentID: foundStudent.studentID });
 })
 
-app.get("/fakeUser", async (req, res) => {
-    // const user = new User({ email: 'colt@gmail.com', username: "colt" })
-    // const newUser = await User.register(user, 'password'); //user register method to add new user
-    const user = await User.findOne({ username: "chan" })
-    res.status(200).send(JSON.stringify(user));
+app.post("/lecturerLogin", async (req, res) => {
+    const { lecturerID, password } = req.body;
+    console.log(lecturerID, password);
+    const foundLecturer = await lecturerUserModel.findOne({ lecturerID: lecturerID });
+    console.log(foundLecturer)
+    if (!foundLecturer) {
+        return res.status(404).send(JSON.stringify({ status: "error", message: "Wrong Username Or Password" }));
+    } if (foundLecturer.password !== password) {
+        return res.status(404).send(JSON.stringify({ status: "error", message: "Wrong Username Or Password" }));
+    }
+    return res.status(200).send({ status: "success", message: "Login success", lecturerID: foundLecturer.lecturerID });
 })
 
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 8080;
 
 const server = app.listen(port, () => {
     console.log("listening on port " + port);
 })
-
-// const io = socket(server);
-// const activeUsers = new Set();
-// io.on("connection", function (socket) {
-//     socket.on("new user", function (data) {
-//         socket.userId = data;
-//         activeUsers.add(data);
-//         io.emit("new user", [...activeUsers]);
-//     });
-
-//     socket.on("disconnect", () => {
-//         activeUsers.delete(socket.userId);
-//         io.emit("user disconnected", socket.userId);
-//     });
-//     console.log("Made socket connection");
-// });
