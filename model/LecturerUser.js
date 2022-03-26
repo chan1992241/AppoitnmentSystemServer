@@ -9,7 +9,12 @@ const LecturerUserShema = new Schema({
     }, password: {
         type: String,
         required: true
-    },
+    }, schedules: [
+        {
+            type: Schema.Types.ObjectId,
+            ref: "Schedule"
+        }
+    ],
 });
 
 
