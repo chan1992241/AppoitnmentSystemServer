@@ -10,6 +10,7 @@ const AppointmentSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: "Schedule"
     },
+    description: String(),
     status: {
         type: String,
         enum: ["pending", "accepted", "rejected"],

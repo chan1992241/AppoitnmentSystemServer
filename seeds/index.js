@@ -1,7 +1,8 @@
 const mongoose = require("mongoose");
 require('dotenv').config();
 // connect to mongoose
-const dbURL = process.env.DB_URL || "mongodb://localhost:27017/appointmentSystem";
+// const dbURL = process.env.DB_URL || "mongodb://localhost:27017/appointmentSystem";
+const dbURL = "mongodb://localhost:27017/appointmentSystem";
 mongoose.connect(dbURL, { useNewUrlParser: true, useUnifiedTopology: true });
 const db = mongoose.connection;
 db.on("error", console.error.bind(console, "connection error:")); //check database connection
@@ -67,6 +68,7 @@ const seedAppointment = async () => {
       title: "Appointment " + i,
       schedule: scheduleIDsArr[0],
       studentID: stuUserID,
+      description: "Description " + i,
       lecturerID: lecturerID,
     })
     await newAppointment.save();
