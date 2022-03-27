@@ -114,8 +114,11 @@ app.post("/changeAppointmentStatus/:appointmentID", async (req, res) => {
 
 app.post("/deleteAppointment/:appointmentID", async (req, res) => {
     const { appointmentID } = req.params;
-    await AppointmentModel.deleteOne({ _id: appointmentID });
-    res.send("deleteAppointment");
+    const appointment = await AppointmentModel.deleteOne({ _id: appointmentID });
+    if (!appointment) {
+        res.status(404).send(JSON.stringify({ status: "error", message: "Appointment not found" }));
+    }
+    res.status(200).send(JSON.stringify({ status: "success", message: "Appointment deleted" }));
 })
 
 const port = process.env.PORT || 8080;
