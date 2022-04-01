@@ -8,6 +8,8 @@ const lecturerUserModel = require("./model/LecturerUser");
 const AppointmentModel = require("./model/Appointment");
 const mongoose = require("mongoose");
 const Schedule = require('./model/Schedule');
+const { populate } = require("./model/StudentUser");
+const Appointment = require("./model/Appointment");
 
 app.use(express.json()) // for parsing application/json
 app.use(express.urlencoded({ extended: true }))
@@ -119,6 +121,61 @@ app.post("/deleteAppointment/:appointmentID", async (req, res) => {
         res.status(404).send(JSON.stringify({ status: "error", message: "Appointment not found" }));
     }
     res.status(200).send(JSON.stringify({ status: "success", message: "Appointment deleted" }));
+})
+
+/*
+ * List all lecturer
+ */
+app.get("/listAllLecturer", async (req, res) => {
+    const foundLecturer = await lecturerUserModel.find().populate("schedules");
+    if (!foundLecturer) {
+        return res.status(404).send(JSON.stringify({ status: "error", message: "Lecturer not found" }));
+    }
+    return res.status(200).json(foundLecturer);
+})
+
+/*
+ * List all upcoming and all booking of students
+ */
+app.get("/listAllBookingStudent/:studentDBID", async (req, res) => {
+    const { studentDBID } = req.params;
+    const foundAppointment = await AppointmentModel.find({ studentID: studentDBID })
+        .populate("studentID")
+        .populate("lecturerID")
+        .populate("schedule");
+    const changedStatusAppointment = changeStatusToEnd(foundAppointment);
+    return res.status(200).json(changedStatusAppointment);
+})
+
+/*
+ * List all upcoming and all booking of students
+ */
+app.get("/listUpcomingBookingStudent/:studentDBID", async (req, res) => {
+    const { studentDBID } = req.params;
+    const foundAppointment = await AppointmentModel.find({ "studentID": studentDBID, })
+        .populate("studentID")
+        .populate("lecturerID")
+        .populate("schedule");
+    const upcomingAppointment = foundAppointment.filter(appointment => {
+        return new Date(appointment.schedule.dateTime) > new Date()
+    })
+    return res.status(200).json(upcomingAppointment);
+})
+
+/*
+ * sent appointment request
+ */
+app.post("/sentAppointmentRequest", async (req, res) => {
+    const { scheduleID, title, description, studentID, lecturerID } = req.body;
+    const newAppointmentRequest = new AppointmentModel({
+        schedule: scheduleID,
+        title,
+        description,
+        studentID,
+        lecturerID
+    })
+    await newAppointmentRequest.save();
+    return res.status(200).send({ status: "success", message: "Appointment request sent" });
 })
 
 const port = process.env.PORT || 8080;
