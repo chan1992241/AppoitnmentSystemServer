@@ -68,7 +68,7 @@ app.get("/listAllBookingLecturer/:lecturerDBID", async (req, res) => {
 app.get("/listUpcomingBookingLecturer/:lecturerDBID", async (req, res) => {
     const { lecturerDBID } = req.params;
     // Query Appointment by LecturerDBID and schedule datetime is greater than now
-    const foundAppointment = await AppointmentModel.find({ "lecturerID": lecturerDBID, })
+    const foundAppointment = await AppointmentModel.find({ "lecturerID": lecturerDBID, "status": "accepted" })
         .populate("studentID")
         .populate("lecturerID")
         .populate("schedule");
@@ -152,7 +152,7 @@ app.get("/listAllBookingStudent/:studentDBID", async (req, res) => {
  */
 app.get("/listUpcomingBookingStudent/:studentDBID", async (req, res) => {
     const { studentDBID } = req.params;
-    const foundAppointment = await AppointmentModel.find({ "studentID": studentDBID, })
+    const foundAppointment = await AppointmentModel.find({ "studentID": studentDBID, "status": "accepted" })
         .populate("studentID")
         .populate("lecturerID")
         .populate("schedule");
@@ -176,6 +176,25 @@ app.post("/sentAppointmentRequest", async (req, res) => {
     })
     await newAppointmentRequest.save();
     return res.status(200).send({ status: "success", message: "Appointment request sent" });
+})
+
+app.get("/listSpecificLecturerDetail/:lecturerID", async (req, res) => {
+    const { lecturerID } = req.params;
+    const foundLecturer = await lecturerUserModel.findById(lecturerID).populate("schedules")
+    if (!foundLecturer) {
+        return res.status(404).send(JSON.stringify({ status: "error", message: "Lecturer not found" }));
+    }
+    return res.status(200).json(foundLecturer);
+})
+
+app.delete("/deleteSpecificSchedule/:scheduleID", async (req, res) => {
+    const { scheduleID } = req.params;
+    const foundSchedule = await Schedule.findById(scheduleID);
+    if (!foundSchedule) {
+        return res.status(404).send(JSON.stringify({ status: "error", message: "Schedule not found" }));
+    }
+    await foundSchedule.remove();
+    return res.status(200).send({ status: "success", message: "Schedule deleted" });
 })
 
 const port = process.env.PORT || 8080;
