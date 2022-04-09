@@ -178,13 +178,24 @@ app.post("/sentAppointmentRequest", async (req, res) => {
     return res.status(200).send({ status: "success", message: "Appointment request sent" });
 })
 
-app.get("/listSpecificLecturerDetail/:lecturerID", async (req, res) => {
+app.get("/listSpecificLecturerDeleteAbleSchedule/:lecturerID", async (req, res) => {
     const { lecturerID } = req.params;
-    const foundLecturer = await lecturerUserModel.findById(lecturerID).populate("schedules")
+    // const foundLecturer = await lecturerUserModel.findById(lecturerID).populate("schedules")
+    //Find schedules that not being used in appointment
+    const foundLecturer = await lecturerUserModel.findById(lecturerID).populate("schedules");
     if (!foundLecturer) {
         return res.status(404).send(JSON.stringify({ status: "error", message: "Lecturer not found" }));
     }
-    return res.status(200).json(foundLecturer);
+    const schedules = [];
+    const foundAppointment = await AppointmentModel.find({ "lecturerID": lecturerID });
+    for (let appointment of foundAppointment) {
+        schedules.push(appointment.schedule.toString());
+    }
+    const schedulesNotInAppointment = foundLecturer.schedules.filter(schedule => {
+        return !schedules.includes(schedule._id.toString());
+    })
+
+    return res.status(200).json(schedulesNotInAppointment);
 })
 
 app.delete("/deleteSpecificSchedule/:scheduleID", async (req, res) => {
